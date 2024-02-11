@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Create Cells
     const cell = svg
-        .selectAll("rect")
+        .selectAll(".cell")
         .data(monthlyVar)
         .enter()
         .append("rect")
