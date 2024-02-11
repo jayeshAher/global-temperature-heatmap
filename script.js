@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     const apiUrl = "https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/global-temperature.json";
     const h = 600;
-    const w = 1400;
-    const padding = { top: 60, right: 250, bottom: 100, left: 100 };
+    const w = 1500;
+    const padding = { top: 100, right: 100, bottom: 100, left: 100 };
     const legendWidth = 300;
     const legendHeight = 20;
     const legendPadding = 40;
@@ -33,10 +33,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const description = svg
         .append("text")
         .attr("x", (w - padding.left - padding.right) / 2)
-        .attr("y", (padding.top / 2) + 20)
+        .attr("y", (padding.top / 2) + 30)
         .attr("id", "description")
         .attr("text-anchor", "middle")
-        .text("1753 - 2015");
+        .text("1753 - 2015 (Base Temperature: 8.66°C)");
 
     // Create Tooltip
     const tooltip = d3
@@ -82,7 +82,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 .axisBottom(xScale)
                 .tickValues(xScale.domain().filter(year => year % 10 === 0));
 
-            svg.append("g")
+            svg
+                .append("g")
                 .attr("transform", `translate(0, ${h - padding.bottom})`)
                 .attr("id", "x-axis")
                 .call(xAxis);
@@ -93,10 +94,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 .tickValues(yScale.domain())
                 .tickFormat(d => d3.timeFormat("%B")(new Date(2000, d, 1)));
 
-            svg.append("g")
+            svg
+                .append("g")
                 .attr("transform", `translate(${padding.left}, 0)`)
                 .attr("id", "y-axis")
                 .call(yAxis);
+
+            // Add X Axis Label
+            svg
+                .append("text")
+                .attr("x", (w - padding.left - padding.right) / 2)
+                .attr("y", h - padding.bottom / 2)
+                .attr("text-anchor", "middle")
+                .text("Years");
+
+            // Add Y Axis Label
+            svg
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("x", (-(h - padding.top - padding.bottom) / 2) - 100)
+                .attr("y", (padding.left / 2) - 30)
+                .attr("text-anchor", "middle")
+                .text("Months");
 
             // Calculate Temperature Value Corresponding to Start of Each Color Swatch Interval
             const colorSwatchStartTemps = Array.from({ length: numTicks }, (_, i) => {
