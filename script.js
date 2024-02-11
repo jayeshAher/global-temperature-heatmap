@@ -53,13 +53,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const minTemp = baseTemp + d3.min(monthlyVar, d => d.variance);
     const maxTemp = baseTemp + d3.max(monthlyVar, d => d.variance);
 
-    // Create xScale
+    // Create X Scale
     const xScale = d3
         .scaleBand()
         .domain(monthlyVar.map(d => d.year))
         .range([padding.left, w - padding.right]);
 
-    // Create yScale
+    // Create Y Scale
     const yScale = d3
         .scaleBand()
         .domain([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
@@ -97,7 +97,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const legendHeight = 20;
     const legendPadding = 40;
     const numColors = 9;
+    const numTicks = numColors + 1;
     const legendColorWidth = legendWidth / numColors;
+    
+    // Calculate the temperature value corresponding to the start of each color swatch interval
+    const colorSwatchStartTemps = Array.from({ length: numTicks }, (_, i) => {
+        return minTemp + (i * (maxTemp - minTemp) / numColors);
+    });
 
     // Create Legend Container
     const legend = svg
@@ -108,22 +114,24 @@ document.addEventListener('DOMContentLoaded', function() {
     // Create Legend Color Scale
     const legendColorScale = d3
         .scaleDiverging()
-        .domain([minTemp, (minTemp + maxTemp) / 2, maxTemp])
+        .domain([minTemp, baseTemp, maxTemp])
         .range(["blue", "white", "red"]);
 
-    // Create x-axis for Legend
+    // Create Legend X Scale
     const legendScaleX = d3
         .scaleLinear()
         .domain([minTemp, maxTemp])
         .range([0, legendWidth]);
 
+    // Create Legend X Axis
     const legendAxisX = d3
         .axisBottom(legendScaleX)
-        .ticks(numColors)
+        .tickValues(colorSwatchStartTemps)
         .tickSize(10)
         .tickFormat(d => d.toFixed(1));
 
-    legend.append("g")
+    legend
+        .append("g")
         .attr("transform", `translate(0, ${legendHeight})`)
         .call(legendAxisX);
 
@@ -135,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .attr("y", 0)
             .attr("width", legendColorWidth)
             .attr("height", legendHeight)
-            .attr("fill", legendColorScale(minTemp + i * (maxTemp - minTemp) / numColors))
+            .attr("fill", legendColorScale(colorSwatchStartTemps[i]))
             .style("stroke", "black");
     }
 
