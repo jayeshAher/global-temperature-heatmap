@@ -2,35 +2,37 @@ document.addEventListener('DOMContentLoaded', function() {
     const apiUrl = "https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/global-temperature.json";
     const h = 600;
     const w = 1400;
-    const padding = 60;
+    const padding = {top: 60, right: 250, bottom: 100, left: 100};
 
-    //Create SVG Container
+    // Create SVG Container
     const svg = d3
         .select("body")
         .append("svg")
-        .attr("height", h)
-        .attr("width", w)
-        .attr("class", "map");
+        .attr("height", h + padding.top + padding.bottom)
+        .attr("width", w + padding.left + padding.right)
+        .attr("class", "map")
+        .append("g")
+        .attr("transform", `translate(${padding.left}, ${padding.top})`);
 
-    //Add Title
+    // Add Title
     const title = svg
         .append("text")
-        .attr("x", (w - 2 * padding) / 2)
-        .attr("y", padding)
+        .attr("x", (w - padding.left - padding.right) / 2)
+        .attr("y", padding.top / 2)
         .attr("id", "title")
         .attr("text-anchor", "middle")
         .text("Temperature Variations Heatmap");
 
-    //Add Description
+    // Add Description
     const description = svg
         .append("text")
-        .attr("x", (w - 2 * padding) / 2)
-        .attr("y", padding + 30)
+        .attr("x", (w - padding.left - padding.right) / 2)
+        .attr("y", (padding.top / 2) + 20)
         .attr("id", "description")
         .attr("text-anchor", "middle")
         .text("1753 - 2015");
 
-    //Create Tooltip
+    // Create Tooltip
     const tooltip = d3
         .select("body")
         .append("div")
@@ -55,13 +57,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const xScale = d3
         .scaleBand()
         .domain(monthlyVar.map(d => d.year))
-        .range([padding, w - padding]);
+        .range([padding.left, w - padding.right]);
 
     // Create yScale
     const yScale = d3
         .scaleBand()
         .domain([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
-        .range([2 * padding, h - padding]);
+        .range([padding.top, h - padding.bottom]);
 
     // Create Diverging Color Scale
     const divergingColorScale = d3
@@ -75,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .tickValues(xScale.domain().filter(year => year % 10 === 0))
     svg
         .append("g")
-        .attr("transform", `translate(0, ${h - padding})`)
+        .attr("transform", `translate(0, ${h - padding.bottom})`)
         .attr("id", "x-axis")
         .call(xAxis);
 
@@ -86,9 +88,56 @@ document.addEventListener('DOMContentLoaded', function() {
         .tickFormat(d => d3.timeFormat("%B")(new Date(2000, d, 1)));
     svg
         .append("g")
-        .attr("transform", `translate(${padding}, 0)`)
+        .attr("transform", `translate(${padding.left}, 0)`)
         .attr("id", "y-axis")
         .call(yAxis);
+
+    // Define Legend Constants
+    const legendWidth = 300;
+    const legendHeight = 20;
+    const legendPadding = 40;
+    const numColors = 9;
+    const legendColorWidth = legendWidth / numColors;
+
+    // Create Legend Container
+    const legend = svg
+        .append("g")
+        .attr("id", "legend")
+        .attr("transform", `translate(${padding.left}, ${h - padding.bottom + legendPadding})`);
+
+    // Create Legend Color Scale
+    const legendColorScale = d3
+        .scaleDiverging()
+        .domain([minTemp, (minTemp + maxTemp) / 2, maxTemp])
+        .range(["blue", "white", "red"]);
+
+    // Create x-axis for Legend
+    const legendScaleX = d3
+        .scaleLinear()
+        .domain([minTemp, maxTemp])
+        .range([0, legendWidth]);
+
+    const legendAxisX = d3
+        .axisBottom(legendScaleX)
+        .ticks(numColors)
+        .tickSize(10)
+        .tickFormat(d => d.toFixed(1));
+
+    legend.append("g")
+        .attr("transform", `translate(0, ${legendHeight})`)
+        .call(legendAxisX);
+
+    // Add Color Swatches
+    for(let i=0; i < numColors; i++) {
+        legend
+            .append("rect")
+            .attr("x", i * legendColorWidth)
+            .attr("y", 0)
+            .attr("width", legendColorWidth)
+            .attr("height", legendHeight)
+            .attr("fill", legendColorScale(minTemp + i * (maxTemp - minTemp) / numColors))
+            .style("stroke", "black");
+    }
 
     // Create Cells
     const cell = svg
@@ -98,8 +147,8 @@ document.addEventListener('DOMContentLoaded', function() {
         .append("rect")
         .attr("x", d => xScale(d.year))
         .attr("y", d => yScale(d.month))
-        .attr("height", (h - (2 * padding)) / 12)
-        .attr("width", (w - (2 * padding)) / (monthlyVar.length / 12))
+        .attr("height", (h - (padding.top + padding.bottom)) / 12)
+        .attr("width", (w - (padding.left + padding.right)) / (monthlyVar.length / 12))
         .attr("fill", d => divergingColorScale(baseTemp + d.variance))
         .attr("class", "cell")
         .attr("data-month", d => d.month)
